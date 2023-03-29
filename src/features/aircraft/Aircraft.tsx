@@ -4,7 +4,6 @@ import {useNavigate} from "react-router-dom";
 import styles from './Aircraft.module.css'
 import {Button} from "@mui/material";
 import {dateFormat} from "../../utils/formatData";
-import { API_KEY_MAP } from '../../api/keys';
 
 export const Aircraft = () => {
 
@@ -15,7 +14,7 @@ export const Aircraft = () => {
         navigator('/')
     }
 
-    const place=`https://www.google.com/maps/embed/v1/place?key=${API_KEY_MAP}&q=${flight?.lat},${flight?.lng}`
+    const place=`https://www.google.com/maps/embed/v1/place?key=${process.env.REACT_APP_API_KEY_MAP}&q=${flight?.lat},${flight?.lng}`
 
     return (
         <div className={styles.block}>
