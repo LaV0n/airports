@@ -1,8 +1,9 @@
-import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
+import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {airLabAPI} from "../api/airLab-api";
 import {errorAsString} from "../utils/errorAsString";
+import {AppRootStateType} from "./store";
 
-type AirCraftType = {
+export type AirCraftType = {
     airline_iata: string
     airline_icao: string
     flight_iata: string
@@ -62,28 +63,38 @@ type FlightData={
     updated: number
     status: string
 }
+type AirportType={
+    name:string
+    iata_code:string
+}
 type InitialStateType={
-    scheduleData:AirCraftType[]
+    scheduleData:AirCraftType[] | null
     errorMessage:string
     flightData:FlightData | null
+    airport:AirportType  | null
 }
 
 const initialState:InitialStateType={
     scheduleData:[],
     flightData:null,
-    errorMessage:''
+    errorMessage:'',
+    airport:null,
 };
 
 const slice=createSlice({
     name:'app',
     initialState,
-    reducers:{},
+    reducers:{
+        setErrorMessage:(state,action:PayloadAction<string>) =>{
+            state.errorMessage=action.payload
+        }
+    },
     extraReducers:builder => {
         builder.addCase(getSchedule.fulfilled,(state, action)=>{
             state.scheduleData=action.payload
         })
         builder.addCase(getSchedule.rejected, (state, action)=>{
-            state.errorMessage = action.payload? action.payload.error : 'unknown error'
+           state.errorMessage = action.payload? action.payload.error : 'unknown error'
         })
         builder.addCase(getFlight.fulfilled,(state, action)=>{
             state.flightData=action.payload
@@ -91,15 +102,29 @@ const slice=createSlice({
         builder.addCase(getFlight.rejected, (state, action)=>{
             state.errorMessage = action.payload? action.payload.error : 'unknown error'
         })
+        builder.addCase(getAirport.fulfilled,(state, action)=>{
+            if(action.payload){
+                state.airport=action.payload
+            }else {
+                state.errorMessage='wrong airport code'
+                state.airport=null
+                state.scheduleData=null
+            }
+        })
+        builder.addCase(getAirport.rejected,(state, action)=>{
+            state.errorMessage=action.payload? action.payload.error : 'unknown error'
+        })
     }
 })
 
 export const appReducer=slice.reducer
+export const {setErrorMessage}=slice.actions
 
 export const getSchedule= createAsyncThunk<AirCraftType[],undefined,{rejectValue:{error:string}}>
-('app/getSchedule',async (arg,{dispatch,rejectWithValue})=>{
+('app/getSchedule',async (arg,{getState, rejectWithValue})=>{
+    const code =(getState() as AppRootStateType).app.airport!.iata_code
     try {
-        const res = await airLabAPI.getSchedule()
+        const res = await airLabAPI.getSchedule(code)
         return res.data.response
     }catch (err){
         const error= errorAsString(err)
@@ -108,7 +133,7 @@ export const getSchedule= createAsyncThunk<AirCraftType[],undefined,{rejectValue
 })
 
 export const getFlight=createAsyncThunk<FlightData,string,{rejectValue:{error:string}}>
-('app/getFlight', async (flight,{dispatch,rejectWithValue})=>{
+('app/getFlight', async (flight,{rejectWithValue})=>{
     try {
         const res= await airLabAPI.getFlight(flight)
         return res.data.response[0]
@@ -116,4 +141,15 @@ export const getFlight=createAsyncThunk<FlightData,string,{rejectValue:{error:st
         const error= errorAsString(err)
         return rejectWithValue({error})
     }
+})
+
+export const getAirport=createAsyncThunk<AirportType,string,{rejectValue:{error:string}}>
+('app/getAirport',async (airport,{dispatch,rejectWithValue})=>{
+   try {
+       const res =await airLabAPI.getAirport(airport)
+       return res.data.error?dispatch(setErrorMessage(res.data.error.message)): res.data.response[0]
+   }catch (err) {
+       const error = errorAsString(err)
+       return rejectWithValue({error})
+   }
 })

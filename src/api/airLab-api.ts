@@ -7,10 +7,13 @@ const instance=axios.create({
 })
 
 export const airLabAPI={
-    getSchedule(){
-        return instance.get(`schedules?dep_iata=EVN&api_key=${apiKey}`)
+    getSchedule(airport:string){
+        return instance.get(`schedules?dep_iata=${airport}&api_key=${apiKey}`)
     },
     getFlight(flight:string){
         return instance.get(`flights?api_key=${apiKey}&flight_icao=${flight}`)
+    },
+    getAirport(airport:string){
+        return instance.get(`airports?iata_code=${airport}&api_key=${apiKey}`)
     }
 }

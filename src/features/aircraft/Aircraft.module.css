@@ -1,0 +1,36 @@
+.block{
+    position: relative;
+ }
+.dataBlock{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap:30px;
+    position: relative;
+    padding-top: 30px;
+}
+.backButton{
+    position: absolute;
+    left: 20px;
+    top:10px;
+    z-index: 3;
+}
+.infoBlock{
+    min-width: 300px;
+}
+p{
+    display: flex;
+    justify-content: space-between;
+}
+span{
+    font-weight: 500;
+}
+.frame{
+    width: 600px;
+    height: 450px;
+    border: none;
+}
+.emptyData{
+    text-align: center;
+}
