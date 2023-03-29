@@ -1,0 +1,2 @@
+export const API_KEY_MAP='AIzaSyB3Z7VhUT95AsWtVHZHbnT6FArX3pYyRGI'
+export const API_KEY_AIRLAB='e6d3bb25-9609-4727-afbb-5b57fb8d832f'
