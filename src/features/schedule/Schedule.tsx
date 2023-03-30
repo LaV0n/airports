@@ -1,9 +1,9 @@
 import React from 'react';
 import {useAppDispatch, useAppSelector} from "../../app/store";
-import { getFlight} from "../../app/appReducer";
 import { useNavigate} from "react-router-dom";
 import styles from './Schedule.module.css'
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
+import {getFlightTC} from "../../app/appReducer";
 
 export const Schedule =  () => {
 
@@ -12,8 +12,8 @@ export const Schedule =  () => {
     const navigator=useNavigate()
 
     const getFlightHandler =(flight:string)=>{
-        dispatch(getFlight(flight))
-       navigator('/aircraft')
+        dispatch(getFlightTC(flight))
+        navigator('/aircraft')
     }
 
     return (

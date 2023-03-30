@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {useAppDispatch, useAppSelector} from "../../app/store";
 import styles from './ErrorBlock.module.css'
 import {Button} from "@mui/material";
-import {setErrorMessage} from "../../app/appReducer";
+import {setErrorMessageAC} from "../../app/appReducer";
 
 export const ErrorBlock = () => {
 
@@ -11,7 +11,7 @@ export const ErrorBlock = () => {
     const dispatch=useAppDispatch()
 
     const closeButtonHandler=()=>{
-        dispatch(setErrorMessage(''))
+        dispatch(setErrorMessageAC(''))
     }
 
     useEffect(()=>{

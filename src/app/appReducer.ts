@@ -1,7 +1,6 @@
-import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {airLabAPI} from "../api/airLab-api";
 import {errorAsString} from "../utils/errorAsString";
-import {AppRootStateType} from "./store";
+import {AppDispatchType, AppRootStateType} from "./store";
 
 export type AirCraftType = {
     airline_iata: string
@@ -71,7 +70,7 @@ type InitialStateType={
     scheduleData:AirCraftType[] | null
     errorMessage:string
     flightData:FlightData | null
-    airport:AirportType  | null
+    airport:AirportType | null
 }
 
 const initialState:InitialStateType={
@@ -81,75 +80,80 @@ const initialState:InitialStateType={
     airport:null,
 };
 
-const slice=createSlice({
-    name:'app',
-    initialState,
-    reducers:{
-        setErrorMessage:(state,action:PayloadAction<string>) =>{
-            state.errorMessage=action.payload
+type SetErrorMessageActionType=ReturnType<typeof setErrorMessageAC>
+type SetAirportCodeActionType=ReturnType<typeof setAirportCodeAC>
+type SetAirportActionType=ReturnType<typeof setAirportAC>
+type SetScheduleActionType=ReturnType<typeof setScheduleAC>
+type SetFlightActionType=ReturnType<typeof setFlightAC>
+
+export type ActionType =SetErrorMessageActionType | SetAirportActionType | SetAirportCodeActionType | SetScheduleActionType | SetFlightActionType
+
+export const appReducer=(state:InitialStateType=initialState, action:ActionType):InitialStateType=>{
+    switch (action.type) {
+        case "SET_ERROR_MESSAGE":{
+            return {...state,errorMessage: action.message}
         }
-    },
-    extraReducers:builder => {
-        builder.addCase(getSchedule.fulfilled,(state, action)=>{
-            state.scheduleData=action.payload
-        })
-        builder.addCase(getSchedule.rejected, (state, action)=>{
-           state.errorMessage = action.payload? action.payload.error : 'unknown error'
-        })
-        builder.addCase(getFlight.fulfilled,(state, action)=>{
-            state.flightData=action.payload
-        })
-        builder.addCase(getFlight.rejected, (state, action)=>{
-            state.errorMessage = action.payload? action.payload.error : 'unknown error'
-        })
-        builder.addCase(getAirport.fulfilled,(state, action)=>{
-            if(action.payload){
-                state.airport=action.payload
+        case "SET_AIRPORT_CODE":{
+            return  {...state, airport:{ name:'', iata_code:action.airportCode} }
+        }
+        case "SET_AIRPORT":{
+            return  {...state,airport:action.airport}
+        }
+        case "SET_SCHEDULE":{
+            return  {...state,scheduleData:action.schedule}
+        }
+        case "SET_FLIGHT":{
+            return  {...state,flightData:action.flightData}
+        }
+        default:
+            return {...state}
+    }
+}
+
+export const setErrorMessageAC =(message:string)=>({type:'SET_ERROR_MESSAGE',message} as const)
+export const setAirportCodeAC =(airportCode:string)=>({type:'SET_AIRPORT_CODE',airportCode} as const)
+export const setAirportAC =(airport:AirportType)=>({type:'SET_AIRPORT',airport} as const)
+export const setScheduleAC =(schedule:AirCraftType[])=>({type:'SET_SCHEDULE',schedule} as const)
+export const setFlightAC =(flightData:FlightData)=>({type:'SET_FLIGHT',flightData} as const)
+
+export const getAirportTC=()=>{
+    return async (dispatch:AppDispatchType, getState:()=>AppRootStateType)=>{
+        const airport= getState().app.airport?.iata_code
+        try {
+            const res =await airLabAPI.getAirport(airport!)
+            if(res.data.response.length!==0){
+                dispatch(setAirportAC(res.data.response[0]))
             }else {
-                state.errorMessage='wrong airport code'
-                state.airport=null
-                state.scheduleData=null
+                dispatch(setErrorMessageAC('wrong airport code'))
             }
-        })
-        builder.addCase(getAirport.rejected,(state, action)=>{
-            state.errorMessage=action.payload? action.payload.error : 'unknown error'
-        })
+        }catch (err) {
+            const error = errorAsString(err)
+            dispatch(setErrorMessageAC(error))
+        }
     }
-})
+}
 
-export const appReducer=slice.reducer
-export const {setErrorMessage}=slice.actions
-
-export const getSchedule= createAsyncThunk<AirCraftType[],undefined,{rejectValue:{error:string}}>
-('app/getSchedule',async (arg,{getState, rejectWithValue})=>{
-    const code =(getState() as AppRootStateType).app.airport!.iata_code
-    try {
-        const res = await airLabAPI.getSchedule(code)
-        return res.data.response
-    }catch (err){
-        const error= errorAsString(err)
-        return rejectWithValue({error})
+export const getScheduleTC=()=>{
+    return async (dispatch:AppDispatchType, getState:()=>AppRootStateType)=>{
+        const airport= getState().app.airport?.iata_code
+        try {
+            const res =await airLabAPI.getSchedule(airport!)
+            dispatch(setScheduleAC(res.data.response))
+        }catch (err) {
+            const error = errorAsString(err)
+            dispatch(setErrorMessageAC(error))
+        }
     }
-})
+}
 
-export const getFlight=createAsyncThunk<FlightData,string,{rejectValue:{error:string}}>
-('app/getFlight', async (flight,{rejectWithValue})=>{
-    try {
-        const res= await airLabAPI.getFlight(flight)
-        return res.data.response[0]
-    }catch (err){
-        const error= errorAsString(err)
-        return rejectWithValue({error})
+export const getFlightTC=(flight:string)=>{
+    return async (dispatch:AppDispatchType)=>{
+        try {
+            const res =await airLabAPI.getFlight(flight)
+            dispatch(setFlightAC(res.data.response[0]))
+        }catch (err) {
+            const error = errorAsString(err)
+            dispatch(setErrorMessageAC(error))
+        }
     }
-})
-
-export const getAirport=createAsyncThunk<AirportType,string,{rejectValue:{error:string}}>
-('app/getAirport',async (airport,{dispatch,rejectWithValue})=>{
-   try {
-       const res =await airLabAPI.getAirport(airport)
-       return res.data.error?dispatch(setErrorMessage(res.data.error.message)): res.data.response[0]
-   }catch (err) {
-       const error = errorAsString(err)
-       return rejectWithValue({error})
-   }
-})
+}

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import styles from './Header.module.css'
-import {useAppDispatch, useAppSelector} from "../../app/store";
-import {getAirport, getSchedule} from "../../app/appReducer";
+import { useAppDispatch, useAppSelector} from "../../app/store";
+import {getAirportTC, getScheduleTC, setAirportCodeAC} from "../../app/appReducer";
 import {Button, TextField} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 
@@ -13,13 +13,14 @@ export const Header = () => {
     const navigator=useNavigate()
 
     const onClickHandler=()=>{
-        dispatch(getAirport(input))
+        dispatch(setAirportCodeAC((input)))
+        dispatch(getAirportTC())
         setInput('')
        navigator('/')
     }
     useEffect(()=>{
         if(airport?.name){
-            dispatch(getSchedule())
+            dispatch(getScheduleTC())
         }
     },[airport])
 
@@ -31,9 +32,11 @@ export const Header = () => {
                />
                 <Button onClick={onClickHandler} variant="outlined">Find Airport</Button>
             </div>
-            <div className={styles.airportName}>
-                {airport?.name}
+            {airport &&
+                <div className={styles.airportName}>
+                {airport.name}
             </div>
+            }
         </div>
     );
 };
