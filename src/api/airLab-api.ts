@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const apiKey=process.env.REACT_APP_API_KEY_AIRLAB
+const apiKey='e6d3bb25-9609-4727-afbb-5b57fb8d832f'
 
-const instance=axios.create({
+export const instance=axios.create({
     baseURL:'https://airlabs.co/api/v9/',
 })
 

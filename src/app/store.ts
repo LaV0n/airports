@@ -1,8 +1,9 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit"
 import {TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
 import { appReducer } from "./appReducer"
+import {AppDispatch} from "../utils/test-utils";
 
-const rootReducer = combineReducers({
+export const rootReducer = combineReducers({
     app:appReducer,
 })
 
@@ -11,7 +12,8 @@ export type AppRootStateType = ReturnType<typeof rootReducer>
 
 export type AppDispatchType = typeof store.dispatch
 
-export const useAppDispatch = () => useDispatch<AppDispatchType>()
+//export const useAppDispatch = () => useDispatch<AppDispatchType>()
+export const useAppDispatch: () => AppDispatch = useDispatch
 
 export const useAppSelector: TypedUseSelectorHook<AppRootStateType> = useSelector
 
